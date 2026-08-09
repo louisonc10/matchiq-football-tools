@@ -1,25 +1,36 @@
 # MATCHIQ Football Tools
 
-A small open-source toolkit for checking football news and transfer reports before they are published.
+[![Tests](https://github.com/louisonc10/matchiq-football-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/louisonc10/matchiq-football-tools/actions/workflows/tests.yml)
 
-I started this project because football news moves quickly and the line between a confirmed report, a strong source and a normal rumour is often unclear.
+A small open-source toolkit for checking football news and transfer reports before publication.
 
-The idea is simple: give each report a consistent confidence check before treating it as verified news.
+I started this project because football news moves quickly, and the line between an official announcement, a strong report and a normal rumour is often unclear.
 
-## Current tools
+The goal is simple: apply the same basic confidence check to every report before treating it as verified news.
 
-### Source Checker
+## Current tool
 
-Checks a report using two things:
+### Football Source Checker
 
-- who the source is
-- how far the story has progressed
+The Source Checker looks at two things:
 
-It then gives the report a confidence score and a simple publishing recommendation.
+- the reliability of the source
+- the current status of the report
 
-## Quick start
+It then returns:
 
-Python 3.10+ is recommended.
+- source tier
+- report status
+- confidence score
+- editorial verdict
+- publishing recommendation
 
-```bash
-python src/source_checker.py --source "BBC Sport" --status reported
+Example:
+
+```text
+Source:         Fabrizio Romano
+Source tier:    Tier 1
+Status:         here we go
+Confidence:     90/100
+Verdict:        VERY HIGH CONFIDENCE
+Recommendation: Strong enough to publish with clear sourcing. Do not label it official.
