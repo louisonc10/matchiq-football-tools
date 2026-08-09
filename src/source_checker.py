@@ -1,21 +1,14 @@
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 import argparse
+import json
 
 
 VERSION = "0.1.0"
 
-# Change these two values when using the Run button
 DEFAULT_SOURCE = "Fabrizio Romano"
 DEFAULT_STATUS = "here we go"
-
-
-SOURCE_SCORES = {
-    "fabrizio romano": (90, "Tier 1"),
-    "david ornstein": (95, "Tier 1"),
-    "bbc sport": (90, "Tier 1"),
-    "the athletic": (90, "Tier 1"),
-    "sky sports": (82, "Tier 2"),
-}
 
 
 STATUS_SCORES = {
@@ -43,6 +36,40 @@ class CheckResult:
     confidence: int
     verdict: str
     recommendation: str
+
+
+def get_project_root() -> Path:
+    if "__file__" in globals():
+        return Path(__file__).resolve().parents[1]
+
+    return Path.cwd()
+
+
+@lru_cache(maxsize=1)
+def load_source_scores() -> dict:
+    config_path = (
+        get_project_root()
+        / "config"
+        / "sources.json"
+    )
+
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"Source config not found: {config_path}"
+        )
+
+    with config_path.open(
+        "r",
+        encoding="utf-8",
+    ) as file:
+        data = json.load(file)
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            "sources.json must contain a JSON object."
+        )
+
+    return data
 
 
 def normalize_status(status: str) -> str:
@@ -82,10 +109,29 @@ def get_source_score(
     if "official" in normalized:
         return 100, "Official source"
 
-    if normalized in SOURCE_SCORES:
-        return SOURCE_SCORES[normalized]
+    source_scores = load_source_scores()
 
-    return 40, "Unrated"
+    source_data = source_scores.get(
+        normalized
+    )
+
+    if source_data is None:
+        return 40, "Unrated"
+
+    score = source_data.get("score")
+    tier = source_data.get("tier")
+
+    if not isinstance(score, int):
+        raise ValueError(
+            f"Invalid score for source: {source}"
+        )
+
+    if not isinstance(tier, str):
+        raise ValueError(
+            f"Invalid tier for source: {source}"
+        )
+
+    return score, tier
 
 
 def get_verdict(
@@ -175,7 +221,6 @@ def check_source(
 
 
 def main() -> None:
-
     parser = argparse.ArgumentParser(
         description=(
             "MATCHIQ Football Source Checker - "
@@ -185,9 +230,7 @@ def main() -> None:
 
     parser.add_argument(
         "--source",
-        help=(
-            "Source name, for example: BBC Sport"
-        ),
+        help="Source name, for example: BBC Sport",
     )
 
     parser.add_argument(
@@ -200,15 +243,8 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    source = (
-        args.source
-        or DEFAULT_SOURCE
-    )
-
-    status = (
-        args.status
-        or DEFAULT_STATUS
-    )
+    source = args.source or DEFAULT_SOURCE
+    status = args.status or DEFAULT_STATUS
 
     try:
         result = check_source(
@@ -216,7 +252,11 @@ def main() -> None:
             status,
         )
 
-    except ValueError as exc:
+    except (
+        ValueError,
+        FileNotFoundError,
+        json.JSONDecodeError,
+    ) as exc:
         print(f"Error: {exc}")
         return
 
@@ -227,31 +267,14 @@ def main() -> None:
 
     print("-" * 40)
 
-    print(
-        f"Source:         "
-        f"{result.source}"
-    )
-
-    print(
-        f"Source tier:    "
-        f"{result.source_tier}"
-    )
-
-    print(
-        f"Status:         "
-        f"{result.status}"
-    )
-
+    print(f"Source:         {result.source}")
+    print(f"Source tier:    {result.source_tier}")
+    print(f"Status:         {result.status}")
     print(
         f"Confidence:     "
         f"{result.confidence}/100"
     )
-
-    print(
-        f"Verdict:        "
-        f"{result.verdict}"
-    )
-
+    print(f"Verdict:        {result.verdict}")
     print(
         f"Recommendation: "
         f"{result.recommendation}"
