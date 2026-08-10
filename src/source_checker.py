@@ -5,10 +5,13 @@ import argparse
 import json
 
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 DEFAULT_SOURCE = "Fabrizio Romano"
 DEFAULT_STATUS = "here we go"
+
+SOURCE_WEIGHT = 0.65
+STATUS_WEIGHT = 0.35
 
 
 STATUS_SCORES = {
@@ -32,7 +35,9 @@ STATUS_ALIASES = {
 class CheckResult:
     source: str
     source_tier: str
+    source_score: int
     status: str
+    status_score: int
     confidence: int
     verdict: str
     recommendation: str
@@ -199,8 +204,8 @@ def check_source(
     ]
 
     confidence = round(
-        (source_score * 0.65)
-        + (status_score * 0.35)
+        (source_score * SOURCE_WEIGHT)
+        + (status_score * STATUS_WEIGHT)
     )
 
     verdict, recommendation = (
@@ -213,7 +218,9 @@ def check_source(
     return CheckResult(
         source=source.strip(),
         source_tier=source_tier,
+        source_score=source_score,
         status=normalized_status,
+        status_score=status_score,
         confidence=confidence,
         verdict=verdict,
         recommendation=recommendation,
@@ -269,7 +276,26 @@ def main() -> None:
 
     print(f"Source:         {result.source}")
     print(f"Source tier:    {result.source_tier}")
+    print(
+        f"Source score:   "
+        f"{result.source_score}/100"
+    )
     print(f"Status:         {result.status}")
+    print(
+        f"Status score:   "
+        f"{result.status_score}/100"
+    )
+    print(
+        "Weighting:      "
+        f"Source {int(SOURCE_WEIGHT * 100)}% + "
+        f"Status {int(STATUS_WEIGHT * 100)}%"
+    )
+    print(
+        "Calculation:    "
+        f"({result.source_score} * {SOURCE_WEIGHT}) + "
+        f"({result.status_score} * {STATUS_WEIGHT}) = "
+        f"{result.confidence}"
+    )
     print(
         f"Confidence:     "
         f"{result.confidence}/100"
