@@ -30,7 +30,11 @@ Example:
 ```text
 Source:         Fabrizio Romano
 Source tier:    Tier 1
+Source score:   90/100
 Status:         here we go
+Status score:   90/100
+Weighting:      Source 65% + Status 35%
+Calculation:    (90 * 0.65) + (90 * 0.35) = 90
 Confidence:     90/100
 Verdict:        VERY HIGH CONFIDENCE
 Recommendation: Strong enough to publish with clear sourcing. Do not label it official.
