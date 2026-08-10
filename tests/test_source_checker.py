@@ -26,6 +26,8 @@ class TestSourceChecker(unittest.TestCase):
             "reported",
         )
 
+        self.assertEqual(result.source_score, 90)
+        self.assertEqual(result.status_score, 70)
         self.assertEqual(result.confidence, 83)
         self.assertEqual(
             result.verdict,
@@ -38,6 +40,8 @@ class TestSourceChecker(unittest.TestCase):
             "official",
         )
 
+        self.assertEqual(result.source_score, 100)
+        self.assertEqual(result.status_score, 100)
         self.assertEqual(result.confidence, 100)
         self.assertEqual(
             result.verdict,
@@ -50,6 +54,8 @@ class TestSourceChecker(unittest.TestCase):
             "rumour",
         )
 
+        self.assertEqual(result.source_score, 40)
+        self.assertEqual(result.status_score, 40)
         self.assertEqual(result.confidence, 40)
         self.assertEqual(
             result.verdict,
@@ -66,6 +72,15 @@ class TestSourceChecker(unittest.TestCase):
             result.status,
             "rumour",
         )
+
+    def test_score_components_are_exposed(self):
+        result = check_source(
+            "BBC Sport",
+            "reported",
+        )
+
+        self.assertEqual(result.source_score, 90)
+        self.assertEqual(result.status_score, 70)
 
     def test_invalid_status(self):
         with self.assertRaises(ValueError):
